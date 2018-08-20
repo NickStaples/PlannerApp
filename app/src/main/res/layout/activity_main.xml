@@ -7,6 +7,7 @@
     tools:context="com.nicholasjohnstaples.plannerapp.MainActivity">
 
     <TextView
+        android:id="@+id/textview1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Hello World!"
