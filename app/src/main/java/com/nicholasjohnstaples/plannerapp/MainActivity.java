@@ -6,9 +6,17 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.TextView;
 
+//import org.json.JSONException;
+//import org.json.JSONObject;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -25,25 +33,26 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        String openWeatherString = "api.openweathermap.org/data/2.5/weather?zip=01545,us";
+        String openWeatherString = "http://api.openweathermap.org/data/2.5/weather?zip=01545,us&APPID=be01d222728ea928de4ac69bd5678b63";
         new downloadWeather().execute(openWeatherString);
 
     }
     private class downloadWeather extends AsyncTask<String, Integer, String>{
         @Override
         protected String doInBackground(String... strings){
-            File weatherFile = new File(getFilesDir(), "weather.txt");
+            File weatherFile = new File(getFilesDir(), "weather.json");
             try {
                 URL website = new URL(strings[0]);
                 ReadableByteChannel rbc = Channels.newChannel(website.openStream());
                 FileOutputStream fos;
-                fos = openFileOutput("weather.txt", Context.MODE_PRIVATE);
+                fos = openFileOutput("weather.json", Context.MODE_PRIVATE);
                 fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
                 fos.close();
 
-                byte[] encoded = Files.readAllBytes(Paths.get("weather.txt"));
-                String s = new String(encoded, "UTF-8");
-                System.out.println(encoded.length);
+                JSONObject jsonPageObject = (JSONObject) (new JSONParser().parse(new FileReader(weatherFile)));
+                JSONObject main = (JSONObject) jsonPageObject.get("main");
+                JSONArray weather = (JSONArray) jsonPageObject.get("weather");
+                String s = "MAIN: " + main.toJSONString() + "\n\nWEATHER: " + weather.toJSONString();
                 return s;
             } catch (MalformedURLException e){
                 //new URL() throw
@@ -54,6 +63,9 @@ public class MainActivity extends AppCompatActivity {
             } catch (IOException e){
                 //getChannel.transferFrom() throw
                 System.out.println("IO Exception!");
+            } catch (ParseException e){
+                //thrown by JSONParser()
+                System.out.println("Parse Exception!");
             }
             return "";
         }
